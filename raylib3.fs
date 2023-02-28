@@ -406,13 +406,13 @@ begin-structure NPatchInfo
 	drop 32 4 +field NPatchInfo-type
 	drop 28 4 +field NPatchInfo-bottom
 drop 36 end-structure
-\ CharInfo
-begin-structure CharInfo
-	drop 4 4 +field CharInfo-offsetX
-	drop 12 4 +field CharInfo-advanceX
-	drop 8 4 +field CharInfo-offsetY
-	drop 0 4 +field CharInfo-value
-	drop 16 24 +field CharInfo-image
+\ GlyphInfo
+begin-structure GlyphInfo
+	drop 4 4 +field GlyphInfo-offsetX
+	drop 12 4 +field GlyphInfo-advanceX
+	drop 8 4 +field GlyphInfo-offsetY
+	drop 0 4 +field GlyphInfo-value
+	drop 16 24 +field GlyphInfo-image
 drop 40 end-structure
 \ Font
 begin-structure Font
@@ -693,7 +693,6 @@ c-function GetFrameTime GetFrameTime  -- r	( -- )
 c-function GetTime GetTime  -- r	( -- )
 c-function SetConfigFlags SetConfigFlags u -- void	( flags -- )
 c-function SetTraceLogLevel SetTraceLogLevel n -- void	( logType -- )
-c-function SetTraceLogExit SetTraceLogExit n -- void	( logType -- )
 c-function SetTraceLogCallback SetTraceLogCallback a -- void	( callback -- )
 c-function TraceLog TraceLog n s ... -- void	( logType text <noname> -- )
 c-function TakeScreenshot TakeScreenshot s -- void	( fileName -- )
@@ -711,17 +710,15 @@ c-function GetFileNameWithoutExt GetFileNameWithoutExt s -- s	( filePath -- )
 c-function GetDirectoryPath GetDirectoryPath s -- s	( filePath -- )
 c-function GetPrevDirectoryPath GetPrevDirectoryPath s -- s	( dirPath -- )
 c-function GetWorkingDirectory GetWorkingDirectory  -- s	( -- )
-c-function GetDirectoryFiles GetDirectoryFiles s a -- a	( dirPath count -- )
-c-function ClearDirectoryFiles ClearDirectoryFiles  -- void	( -- )
+c-function LoadDirectoryFiles LoadDirectoryFiles s -- a	( dirPath count -- )
+c-function UnloadDirectoryFiles UnloadDirectoryFiles  -- void	( -- )
 c-function ChangeDirectory ChangeDirectory s -- n	( dir -- )
 c-function IsFileDropped IsFileDropped  -- n	( -- )
-c-function GetDroppedFiles GetDroppedFiles a -- a	( count -- )
-c-function ClearDroppedFiles ClearDroppedFiles  -- void	( -- )
+c-function LoadDroppedFiles LoadDroppedFiles -- a	( count -- )
+c-function UnloadDroppedFiles UnloadDroppedFiles  -- void	( -- )
 c-function GetFileModTime GetFileModTime s -- n	( fileName -- )
 c-function CompressData CompressData a n a -- a	( data dataLength compDataLength -- )
 c-function DecompressData DecompressData a n a -- a	( compData compDataLength dataLength -- )
-c-function SaveStorageValue SaveStorageValue u n -- void	( position value -- )
-c-function LoadStorageValue LoadStorageValue u -- n	( position -- )
 c-function OpenURL OpenURL s -- void	( url -- )
 
 \  Input Handling Functions (Module: core)
@@ -734,7 +731,6 @@ c-function SetExitKey SetExitKey n -- void	( key -- )
 c-function GetKeyPressed GetKeyPressed  -- n	( -- )
 c-function GetCharPressed GetCharPressed -- n   ( -- )
 c-function IsGamepadAvailable IsGamepadAvailable n -- n	( gamepad -- )
-c-function IsGamepadName IsGamepadName n s -- n	( gamepad name -- )
 c-function GetGamepadName GetGamepadName n -- s	( gamepad -- )
 c-function IsGamepadButtonPressed IsGamepadButtonPressed n n -- n	( gamepad button -- )
 c-function IsGamepadButtonDown IsGamepadButtonDown n n -- n	( gamepad button -- )
@@ -774,7 +770,7 @@ c-function iGetTouchPosition iGetTouchPosition n a -- a	( index vector2 --vector
 c-function SetGesturesEnabled SetGesturesEnabled u -- void	( gestureFlags -- )
 c-function IsGestureDetected IsGestureDetected n -- n	( gesture -- )
 c-function GetGestureDetected GetGestureDetected  -- n	( -- )
-c-function GetTouchPointsCount GetTouchPointsCount  -- n	( -- )
+c-function GetTouchPointCount GetTouchPointCount  -- n	( -- )
 c-function GetGestureHoldDuration GetGestureHoldDuration  -- r	( -- )
 
 \c Vector2* iGetGestureDragVector(Vector2* v){
@@ -1023,17 +1019,17 @@ c-function UnloadRenderTexture UnloadRenderTexture a{*(RenderTexture2D*)} -- voi
 c-function UpdateTexture UpdateTexture a{*(Texture2D*)} a -- void	( texture pixels -- )
 c-function UpdateTextureRec UpdateTextureRec a{*(Texture2D*)} a{*(Rectangle*)} a -- void	( texture rec pixels -- )
 
-\c Image* iGetTextureData(Texture2D texture, Image* img){
-\c Image imga = GetTextureData(texture);
+\c Image* LoadImageFromTexture(Texture2D texture, Image* img){
+\c Image imga = LoadImageFromTexture(texture);
 \c *img = imga; return img; }
 
-c-function iGetTextureData iGetTextureData a{*(Texture2D*)} a -- a ( texture image -- image )
+c-function LoadImageFromTexture LoadImageFromTexture a{*(Texture2D*)} a -- a ( texture image -- image )
 
-\c Image* iGetScreenData(Image* img){
-\c Image imga = GetScreenData();
+\c Image* LoadImageFromScreen(Image* img){
+\c Image imga = LoadImageFromScreen();
 \c *img = imga; return img; }
 
-c-function iGetScreenData iGetScreenData a -- a	( image -- image )
+c-function LoadImageFromScreen LoadImageFromScreen a -- a	( image -- image )
 c-function GenTextureMipmaps GenTextureMipmaps a -- void	( texture -- )
 c-function SetTextureFilter SetTextureFilter a{*(Texture2D*)} n -- void	( texture filterMode -- )
 c-function SetTextureWrap SetTextureWrap a{*(Texture2D*)} n -- void	( texture wrapMode -- )
@@ -1136,7 +1132,7 @@ c-function iLoadFontFromMemory iLoadFontFromMemory s s n n a n a -- a ( fileData
 
 c-function LoadFontData LoadFontData s n n a n n -- a	( fileName dataSize fontSize fontChars charsCount type -- )
 
-\c Image* iGenImageFontAtlas(const CharInfo* chars, Rectangle** recs, int charsCount, int fontSize, int padding, int packMethod, Image* img){
+\c Image* iGenImageFontAtlas(const GlyphInfo* chars, Rectangle** recs, int charsCount, int fontSize, int padding, int packMethod, Image* img){
 \c Image imga = GenImageFontAtlas(chars, recs, charsCount, fontSize, padding, packMethod);
 \c *img = imga; return img; }
 
@@ -1146,8 +1142,6 @@ c-function UnloadFont UnloadFont a{*(Font*)} -- void	( font -- )
 c-function DrawFPS DrawFPS n n -- void	( posX posY -- )
 c-function DrawText DrawText s n n n a{*(Color*)} -- void	( text posX posY fontSize color -- )
 c-function DrawTextEx DrawTextEx a{*(Font*)} s a{*(Vector2*)} r r a{*(Color*)} -- void	( font text position fontSize spacing tint -- )
-c-function DrawTextRec DrawTextRec a{*(Font*)} s a{*(Rectangle*)} r r n a{*(Color*)} -- void	( font text rec fontSize spacing wordWrap tint -- )
-c-function DrawTextRecEx DrawTextRecEx a{*(Font*)} s a{*(Rectangle*)} r r n a{*(Color*)} n n a{*(Color*)} a{*(Color*)} -- void	( font text rec fontSize spacing wordWrap tint selectStart selectLength selectTint selectBackTint -- )
 c-function DrawTextCodepoint DrawTextCodepoint a{*(Font*)} n a{*(Vector2*)} r a{*(Color*)} -- void	( font codepoint position scale tint -- )
 c-function MeasureText MeasureText s n -- n	( text fontSize -- )
 
@@ -1172,11 +1166,11 @@ c-function TextToUpper TextToUpper s -- s	( text -- )
 c-function TextToLower TextToLower s -- s	( text -- )
 c-function TextToPascal TextToPascal s -- s	( text -- )
 c-function TextToInteger TextToInteger s -- n	( text -- )
-c-function TextToUtf8 TextToUtf8 a n -- a	( codepoints length -- )
-c-function GetCodepoints GetCodepoints s a -- a	( text count -- )
+c-function TextCodepointsToUTF8 TextCodepointsToUTF8 a n -- a	( codepoints length -- )
+c-function LoadCodepoints LoadCodepoints s a -- a	( text count -- )
 c-function GetCodepointsCount GetCodepointsCount s -- n	( text -- )
-c-function GetNextCodepoint GetNextCodepoint s a -- n	( text bytesProcessed -- )
-c-function CodepointToUtf8 CodepointToUtf8 n a -- s	( codepoint byteLength -- )
+c-function GetCodepoint GetCodepoint s a -- n	( text bytesProcessed -- )
+c-function CodepointToUTF8 CodepointToUTF8 n a -- s	( codepoint byteLength -- )
 c-function DrawLine3D DrawLine3D a{*(Vector3*)} a{*(Vector3*)} a{*(Color*)} -- void	( startPos endPos color -- )
 c-function DrawPoint3D DrawPoint3D a{*(Vector3*)} a{*(Color*)} -- void	( position color -- )
 c-function DrawCircle3D DrawCircle3D a{*(Vector3*)} r a{*(Vector3*)} r a{*(Color*)} -- void	( center radius rotationAxis rotationAngle color -- )
@@ -1195,7 +1189,6 @@ c-function DrawCylinderWires DrawCylinderWires a{*(Vector3*)} r r r n a{*(Color*
 c-function DrawPlane DrawPlane a{*(Vector3*)} a{*(Vector2*)} a{*(Color*)} -- void	( centerPos size color -- )
 c-function DrawRay DrawRay a{*(Ray*)} a{*(Color*)} -- void	( ray color -- )
 c-function DrawGrid DrawGrid n r -- void	( slices spacing -- )
-c-function DrawGizmo DrawGizmo a{*(Vector3*)} -- void	( position -- )
 
 \c Model* iLoadModel(const char* fileName, Model* mod){
 \c Model moda = LoadModel(fileName);
@@ -1210,7 +1203,6 @@ c-function iLoadModel iLoadModel s a -- a ( fileName model -- model )
 c-function iLoadModelFromMesh iLoadModelFromMesh a{*(Mesh*)} a -- a ( mesh model -- model )
 c-function UnloadModel UnloadModel a{*(Model*)} -- void	( model -- )
 c-function UnloadModelKeepMeshes UnloadModelKeepMeshes a{*(Model*)} -- void ( model -- )
-c-function LoadMeshes LoadMeshes s a -- a	( fileName meshCount -- )
 c-function ExportMesh ExportMesh a{*(Mesh*)} s -- void	( mesh fileName -- )
 c-function UnloadMesh UnloadMesh a{*(Mesh*)} -- void	( mesh -- )
 c-function LoadMaterials LoadMaterials s a -- a	( fileName materialCount -- )
@@ -1288,14 +1280,13 @@ c-function iGenMeshHeightmap iGenMeshHeightmap a{*(Image*)} a{*(Vector3*)} a -- 
 
 c-function iGenMeshCubicmap iGenMeshCubicmap a{*(Image*)} a{*(Vector3*)} a -- a ( cubicmap cubeSize mesh -- mesh )
 
-\c BoundingBox* iMeshBoundingBox(Mesh mesh, BoundingBox* box){
-\c BoundingBox boxa = MeshBoundingBox(mesh);
+\c BoundingBox* GetMeshBoundingBox(Mesh mesh, BoundingBox* box){
+\c BoundingBox boxa = GetMeshBoundingBox(mesh);
 \c *box = boxa; return box; }
 
-c-function iMeshBoundingBox iMeshBoundingBox a{*(Mesh*)} a -- a ( mesh mesh -- mesh )
-c-function MeshTangents MeshTangents a -- void	( mesh -- )
-c-function MeshBinormals MeshBinormals a -- void	( mesh -- )
-c-function MeshNormalsSmooth MeshNormalsSmooth a -- void	( mesh -- )
+c-function GetMeshBoundingBox GetMeshBoundingBox a{*(Mesh*)} a -- a ( mesh mesh -- mesh )
+c-function GenMeshTangents GenMeshTangents a -- void	( mesh -- )
+c-function GenMeshBinormals GenMeshBinormals a -- void	( mesh -- )
 c-function DrawModel DrawModel a{*(Model*)} a{*(Vector3*)} r a{*(Color*)} -- void	( model position scale tint -- )
 c-function DrawModelEx DrawModelEx a{*(Model*)} a{*(Vector3*)} a{*(Vector3*)} r a{*(Vector3*)} a{*(Color*)} -- void	( model position rotationAxis rotationAngle scale tint -- )
 c-function DrawModelWires DrawModelWires a{*(Model*)} a{*(Vector3*)} r a{*(Color*)} -- void	( model position scale tint -- )
@@ -1334,80 +1325,69 @@ c-function iGetCollisionRayGround iGetCollisionRayGround a{*(Ray*)} r a -- a ( r
 
 c-function iLoadShader iLoadShader s s a -- a ( vsFileName fsFileName shader -- shader )
 
-\c Shader* iLoadShaderCode(const char* vsCode, const char* fsCode, Shader* shd){
-\c Shader shda = LoadShaderCode(vsCode, fsCode);
+\c Shader* rlLoadShaderCode(const char* vsCode, const char* fsCode, Shader* shd){
+\c Shader shda = rlLoadShaderCode(vsCode, fsCode);
 \c *shd = shda; return shd; }
 
-c-function iLoadShaderCode iLoadShaderCode s s a -- a ( vsCode fsCode shader -- shader )
+c-function rlLoadShaderCode rlLoadShaderCode s s a -- a ( vsCode fsCode shader -- shader )
 c-function UnloadShader UnloadShader a{*(Shader*)} -- void	( shader -- )
 
-\c Shader* iGetShaderDefault(Shader* shd){
-\c Shader shda = GetShaderDefault();
+\c Shader* rlGetShaderDefault(Shader* shd){
+\c Shader shda = rlGetShaderDefault();
 \c *shd = shda; return shd; }
 
-c-function iGetShaderDefault iGetShaderDefault  a -- a ( shader -- shader )
+c-function rlGetShaderDefault rlGetShaderDefault  a -- a ( shader -- shader )
 
-\c Texture2D* iGetTextureDefault(Texture2D* tex){
+\c Texture2D* rlGetTextureDefault(Texture2D* tex){
 \c Texture2D texa = GetTextureDefault();
 \c *tex = texa; return tex; }
 
-c-function iGetTextureDefault iGetTextureDefault  a -- a ( texture2d -- texture2d )
+c-function rlGetTextureDefault rlGetTextureDefault  a -- a ( texture2d -- texture2d )
 
-\c Texture2D* iGetShapesTexture(Texture2D* tex){
-\c Texture2D texa = GetShapesTexture();
-\c *tex = texa; return tex; }
-
-c-function iGetShapesTexture iGetShapesTexture  a -- a ( texture2d -- texture2d )
-
-\c Rectangle* iGetShapesTextureRec(Rectangle* rec){
-\c Rectangle reca = GetShapesTextureRec();
-\c *rec = reca; return rec; }
-
-c-function iGetShapesTextureRec iGetShapesTextureRec a -- a ( rectangle -- rectangle )
 c-function SetShapesTexture SetShapesTexture a{*(Texture2D*)} a{*(Rectangle*)} -- void	( texture source -- )
 c-function GetShaderLocation GetShaderLocation a{*(Shader*)} s -- n	( shader uniformName -- )
 c-function SetShaderValue SetShaderValue a{*(Shader*)} n a n -- void	( shader uniformLoc value uniformType -- )
 c-function SetShaderValueV SetShaderValueV a{*(Shader*)} n a n n -- void	( shader uniformLoc value uniformType count -- )
 c-function SetShaderValueMatrix SetShaderValueMatrix a{*(Shader*)} n a{*(Matrix*)} -- void	( shader uniformLoc mat -- )
 c-function SetShaderValueTexture SetShaderValueTexture a{*(Shader*)} n a{*(Texture2D*)} -- void	( shader uniformLoc texture -- )
-c-function SetMatrixProjection SetMatrixProjection a{*(Matrix*)} -- void	( proj -- )
-c-function SetMatrixModelview SetMatrixModelview a{*(Matrix*)} -- void	( view -- )
+c-function rlSetMatrixProjection rlSetMatrixProjection a{*(Matrix*)} -- void	( proj -- )
+c-function rlSetMatrixModelview rlSetMatrixModelview a{*(Matrix*)} -- void	( view -- )
 
-\c Matrix* iGetMatrixModelview(Matrix* mat){
-\c Matrix mata = GetMatrixModelview();
+\c Matrix* rlGetMatrixModelview(Matrix* mat){
+\c Matrix mata = rlGetMatrixModelview();
 \c *mat = mata; return mat; }
 
-c-function iGetMatrixModelview iGetMatrixModelview  a -- a ( matrix -- matrix )
+c-function rlGetMatrixModelview rlGetMatrixModelview  a -- a ( matrix -- matrix )
 
-\c Matrix* iGetMatrixProjection(Matrix* mat){
+\c Matrix* GetMatrixProjection(Matrix* mat){
 \c Matrix mata = GetMatrixProjection();
 \c *mat = mata; return mat; }
 
-c-function iGetMatrixProjection iGetMatrixProjection  a -- a ( matrix -- matrix )
+c-function GetMatrixProjection GetMatrixProjection  a -- a ( matrix -- matrix )
 
-\c Texture2D* iGenTextureCubemap(Shader shader, Texture2D map, int size, int format, Texture2D* tex){
+\c Texture2D* GenTextureCubemap(Shader shader, Texture2D map, int size, int format, Texture2D* tex){
 \c Texture2D texa = GenTextureCubemap(shader, map, size, format);
 \c *tex = texa; return tex; }
 
-c-function iGenTextureCubemap iGenTextureCubemap a{*(Shader*)} a{*(Texture2D*)} n n a -- a ( shader map size format texture -- texture )
+c-function GenTextureCubemap GenTextureCubemap a{*(Shader*)} a{*(Texture2D*)} n n a -- a ( shader map size format texture -- texture )
 
-\c Texture2D* iGenTextureIrradiance(Shader shader, Texture2D cubemap, int size, Texture2D* tex){
+\c Texture2D* GenTextureIrradiance(Shader shader, Texture2D cubemap, int size, Texture2D* tex){
 \c Texture2D texa = GenTextureIrradiance(shader, cubemap, size);
 \c *tex = texa; return tex; }
 
-c-function iGenTextureIrradiance iGenTextureIrradiance a{*(Shader*)} a{*(Texture2D*)} n a -- a ( shader cubemap size texture -- texture )
+c-function GenTextureIrradiance GenTextureIrradiance a{*(Shader*)} a{*(Texture2D*)} n a -- a ( shader cubemap size texture -- texture )
 
-\c Texture2D* iGenTexturePrefilter(Shader shader, Texture2D cubemap, int size, Texture2D* tex){
+\c Texture2D* GenTexturePrefilter(Shader shader, Texture2D cubemap, int size, Texture2D* tex){
 \c Texture2D texa = GenTexturePrefilter(shader, cubemap, size);
 \c *tex = texa; return tex; }
 
-c-function iGenTexturePrefilter iGenTexturePrefilter a{*(Shader*)} a{*(Texture2D*)} n a -- a ( shader cubemap size texture -- texture )
+c-function GenTexturePrefilter GenTexturePrefilter a{*(Shader*)} a{*(Texture2D*)} n a -- a ( shader cubemap size texture -- texture )
 
-\c Texture2D* iGenTextureBRDF(Shader shader, int size, Texture2D* tex){
+\c Texture2D* GenTextureBRDF(Shader shader, int size, Texture2D* tex){
 \c Texture2D texa = GenTextureBRDF(shader, size);
 \c *tex = texa; return tex; }
 
-c-function iGenTextureBRDF iGenTextureBRDF a{*(Shader*)} n a -- a ( shader size texture -- texture )
+c-function GenTextureBRDF GenTextureBRDF a{*(Shader*)} n a -- a ( shader size texture -- texture )
 c-function BeginShaderMode BeginShaderMode a{*(Shader*)} -- void	( shader -- )
 c-function EndShaderMode EndShaderMode  -- void	( -- )
 c-function BeginBlendMode BeginBlendMode n -- void	( mode -- )
